@@ -1,16 +1,13 @@
 {
-  "name": "ldap-pool",
-  "version": "0.0.1016",
+  "name": "csc-ldap-pool",
+  "version": "0.0.1019",
   "description": "LDAP client connection pool",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
   "scripts": {
+    "build": "node_modules/.bin/tsc --build",
     "test": "./scripts/test.sh"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ORESoftware/ldap-pool.git"
   },
   "keywords": [
     "ldap",
@@ -19,7 +16,7 @@
     "connection",
     "ldapjs"
   ],
-  "author": "Olegzandr VD",
+  "author": "Olegzandr VD / Mateusz Kruszyk",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ORESoftware/ldap-pool/issues"
@@ -31,6 +28,8 @@
   },
   "devDependencies": {
     "@types/ldapjs": "^1.0.3",
-    "@types/node": "^7.0.63"
+    "@types/node": "^7.0.63",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.6"
   }
 }

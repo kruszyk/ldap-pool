@@ -109,9 +109,23 @@ export class LDAPPool {
   static create(opts: LDAPPoolOpts) {
     return new LDAPPool(opts);
   }
-  
+
+  cleanUpClient(client: LDAPPoolClient) {
+        ++this.numClientsDestroyed;
+        client.ldapPoolRemoved = true;
+        this.addClient();
+        clearActive(this, client);
+        clearInactive(this, client);
+        client.unbind(function () {
+            client.destroy();
+            client.removeAllListeners();
+        });
+  }
+
   addClient(): void {
-    
+
+    let _this = this;
+
     let $opts = Object.assign({}, this.connOpts);
     $opts.idleTimeout = Math.round((Math.random() * $opts.idleTimeout * (1 / 3)) + $opts.idleTimeout * (5 / 6));
     
@@ -121,7 +135,7 @@ export class LDAPPool {
     
     let client = ldap.createClient($opts) as LDAPPoolClient;
     client.poolClientId = this.clientId++;
-    
+
     client.on('idle', () => {
       
       if (client.ldapPoolRemoved) {
@@ -132,16 +146,8 @@ export class LDAPPool {
         log.info(chalk.yellow(`client with id => ${client.poolClientId} is idle.`));
       }
       
-      ++this.numClientsDestroyed;
       logSize(this, 'event: idle');
-      client.ldapPoolRemoved = true;
-      this.addClient();
-      clearActive(this, client);
-      clearInactive(this, client);
-      client.unbind(function () {
-        client.destroy();
-        client.removeAllListeners();
-      });
+        _this.cleanUpClient(client);
     });
     
     client.on('error', (e: Error) => {
@@ -149,21 +155,15 @@ export class LDAPPool {
       if (client.ldapPoolRemoved) {
         return;
       }
-      ++this.numClientsDestroyed;
       logSize(this, 'event: error');
-      client.ldapPoolRemoved = true;
-      this.addClient();
-      clearActive(this, client);
-      clearInactive(this, client);
-      client.unbind(function () {
-        client.destroy();
-        client.removeAllListeners();
-      });
+        _this.cleanUpClient(client);
     });
     
     client.bind(this.dn, this.pwd, function (err: Error) {
       if (err) {
         log.error('Client bind error => ', err.stack || err);
+        //console.log(_this);
+        _this.cleanUpClient(client);
         return;
       }
       
@@ -197,7 +197,7 @@ export class LDAPPool {
       }
     };
   }
-  
+
   getClient(): Promise<LDAPPoolClient> {
     
     logSize(this, 'event: get client');
